@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Room Revenue Report</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, "Times New Roman", Times, serif; background: #e9e9e7; color: #1a1a1a; }
+  .wrap { max-width: 860px; margin: 40px auto; padding: 64px 72px; background: #fff; box-shadow: 0 0 0 1px #d4d4d0, 0 8px 24px rgba(0,0,0,.08); }
+
+  .letterhead { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px double #1a1a1a; padding-bottom: 18px; margin-bottom: 8px; }
+  .letterhead .org { font-family: Georgia, serif; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+  .letterhead .org small { display: block; font-weight: 400; font-size: 11px; color: #555; letter-spacing: .02em; margin-top: 3px; font-family: Arial, sans-serif; }
+  .letterhead .meta { text-align: right; font-family: Arial, sans-serif; font-size: 11px; color: #555; line-height: 1.6; }
+
+  .doc-title { text-align: center; margin: 30px 0 6px; }
+  .doc-title .kicker { font-family: Arial, sans-serif; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #666; }
+  .doc-title h1 { margin: 8px 0 4px; font-size: 26px; font-weight: 700; letter-spacing: .01em; }
+  .doc-title .period { font-family: Arial, sans-serif; font-size: 13px; color: #555; }
+
+  hr.rule { border: none; border-top: 1px solid #1a1a1a; margin: 28px 0 22px; }
+
+  .section-label { font-family: Arial, sans-serif; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #666; font-weight: 700; margin-bottom: 12px; }
+
+  /* Current-month highlight block */
+  .highlight { border: 1.5px solid #1a1a1a; padding: 20px 24px; margin-bottom: 34px; }
+  .highlight-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px 24px; }
+  .highlight-row .month-tag { font-family: Georgia, serif; font-size: 20px; font-weight: 700; letter-spacing: .01em; }
+  .highlight-figs { display: flex; gap: 40px; margin-top: 14px; flex-wrap: wrap; font-family: Arial, sans-serif; }
+  .highlight-figs .figwrap .flabel { font-size: 15px; font-weight: 700; color: #1a1a1a; letter-spacing: .02em; }
+  .highlight-figs .figwrap .fsub { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #666; margin-top: 6px; }
+  .highlight-figs .figwrap .fval { font-size: 22px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .pos { color: #14532d; }
+  .neg { color: #7f1d1d; }
+  .pct { font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; margin-left: 8px; white-space: nowrap; }
+  table.figures tr.total td.num { white-space: nowrap; }
+
+  /* Multi-month table */
+  table.figures { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px; margin-bottom: 8px; }
+  table.figures th { text-align: right; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #666; font-weight: 700; padding: 0 0 10px; border-bottom: 1.5px solid #1a1a1a; }
+  table.figures th:first-child, table.figures td:first-child { text-align: left; }
+  table.figures th.year-head { font-size: 20px; text-transform: none; letter-spacing: normal; color: #1a1a1a; font-family: Georgia, serif; font-weight: 700; }
+  table.figures td { padding: 11px 0; border-bottom: 1px solid #ddd; text-align: right; font-variant-numeric: tabular-nums; }
+  table.figures td:first-child { font-weight: 700; }
+  table.figures tr.current-row td { background: #f7f7f5; }
+  table.figures tr.current-row td:first-child::after { content: " (current)"; font-weight: 400; font-size: 10px; color: #666; }
+  table.figures tr.total td { border-top: 1.5px solid #1a1a1a; border-bottom: none; padding-top: 14px; font-weight: 700; font-size: 18px; }
+  table.figures td.del { text-align: center; }
+  .del-btn { font-family: Arial, sans-serif; background: transparent; border: none; color: #aaa; cursor: pointer; font-size: 15px; }
+  .del-btn:hover { color: #7f1d1d; }
+
+  .summary-line { font-family: Arial, sans-serif; font-size: 13px; color: #333; line-height: 1.9; margin: 26px 0; padding: 16px 20px; background: #f7f7f5; border-left: 3px solid #1a1a1a; }
+  .summary-line b { font-variant-numeric: tabular-nums; }
+
+  .empty { font-family: Arial, sans-serif; font-size: 13px; color: #666; padding: 30px 0; text-align: center; border: 1px dashed #ccc; margin-bottom: 24px; }
+
+  .signoff { margin-top: 56px; display: flex; justify-content: space-between; font-family: Arial, sans-serif; font-size: 11px; color: #555; }
+  .signoff .line { border-top: 1px solid #999; padding-top: 6px; width: 200px; }
+
+  .footnote { margin-top: 40px; font-family: Arial, sans-serif; font-size: 10px; color: #999; text-align: center; letter-spacing: .02em; }
+
+  /* --- Toolbar (screen only) --- */
+  .toolbar { max-width: 860px; margin: 0 auto 0; padding: 14px 16px; background: #1a1a1a; border-radius: 6px 6px 0 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: Arial, sans-serif; }
+  .toolbar .cloud-pill { font-size: 12px; font-weight: 700; color: #f5f5f0; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); }
+  .toolbar .cloud-pill.ok { background: rgba(20,83,45,.4); border-color: rgba(20,83,45,.8); }
+  .toolbar .cloud-pill.err { background: rgba(127,29,29,.4); border-color: rgba(127,29,29,.8); }
+  .toolbar .spacer { flex: 1; }
+  .toolbar button { font-family: Arial, sans-serif; font-size: 13px; padding: 8px 12px; border-radius: 5px; border: 1px solid #f5f5f0; background: #f5f5f0; color: #1a1a1a; font-weight: 600; cursor: pointer; }
+  .toolbar button:hover { background: #e5e5e0; }
+  .toolbar button.ghost { background: transparent; color: #f5f5f0; border-color: #555; }
+  .toolbar button.ghost:hover { background: #262626; }
+
+  .add-panel { max-width: 860px; margin: 0 auto 40px; padding: 20px 16px; background: #f2f2ee; font-family: Arial, sans-serif; }
+  .add-panel h3 { margin: 0 0 14px; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #555; }
+  .form-row { display: grid; grid-template-columns: 1fr 1.4fr 1.4fr auto; gap: 12px; align-items: end; }
+  @media (max-width: 720px) { .form-row { grid-template-columns: 1fr 1fr; } }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; font-family: Arial, sans-serif; font-size: 14px; padding: 9px 12px; border-radius: 5px; border: 1px solid #ccc; }
+  .msg { margin-top: 10px; font-size: 12px; }
+  .msg.err { color: #7f1d1d; }
+  .msg.ok  { color: #14532d; }
+  .panel-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .panel-actions button { font-family: Arial, sans-serif; font-size: 12px; padding: 7px 12px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  .panel-actions button:hover { background: #eee; }
+
+  /* --- Cloud login panel --- */
+  .cloud-panel { max-width: 860px; margin: 0 auto 40px; padding: 20px 16px; background: #10213b; color: #e6f1fb; font-family: Arial, sans-serif; border-radius: 6px; }
+  .cloud-panel h3 { margin: 0 0 6px; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #9cc0e4; }
+  .cloud-panel p.sub { margin: 0 0 16px; font-size: 12px; color: #9cc0e4; line-height: 1.6; }
+  .cloud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 720px) { .cloud-grid { grid-template-columns: 1fr; } }
+  .cloud-panel label { display: block; font-size: 12px; font-weight: 600; color: #cfe2f5; margin-bottom: 6px; }
+  .cloud-panel input { width: 100%; font-family: Arial, sans-serif; font-size: 14px; padding: 9px 12px; border-radius: 5px; border: 1px solid #2d4a73; background: #0b1a30; color: #fff; }
+  .cloud-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .cloud-actions button { font-family: Arial, sans-serif; font-size: 13px; padding: 9px 16px; border-radius: 5px; border: none; cursor: pointer; font-weight: 700; }
+  .cloud-actions .btn-login { background: #10b981; color: #fff; }
+  .cloud-actions .btn-signup { background: transparent; color: #cfe2f5; border: 1px solid #2d4a73; }
+  .cloud-actions .btn-logout { background: transparent; color: #cfe2f5; border: 1px solid #2d4a73; }
+  .cloud-msg { margin-top: 12px; font-size: 12px; }
+  .cloud-msg.err { color: #fca5a5; }
+  .cloud-msg.ok  { color: #86efac; }
+  .cloud-panel details { margin-top: 16px; }
+  .cloud-panel summary { cursor: pointer; font-weight: 700; color: #9cc0e4; font-size: 13px; }
+  .cloud-panel pre { white-space: pre-wrap; background: #0b1a30; border: 1px solid #2d4a73; border-radius: 8px; padding: 12px; font-size: 11px; max-height: 240px; overflow: auto; color: #cfe2f5; }
+  .cloud-panel .copy-sql { margin-top: 8px; font-size: 12px; padding: 6px 12px; border-radius: 5px; border: 1px solid #2d4a73; background: transparent; color: #cfe2f5; cursor: pointer; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 16mm; }
+    body { background: #fff; }
+    .toolbar, .add-panel, .cloud-panel, .del-btn, td.del, th.del { display: none !important; }
+    .wrap { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Supabase: cloud database + login so your figures are safe on a server and synced across devices -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="toolbar">
+  <span id="cloudStatus" class="cloud-pill">&#9729;&#65039; Cloud: connecting&hellip;</span>
+  <span class="spacer"></span>
+  <button onclick="downloadPDF()">Download PDF</button>
+  <button class="ghost" onclick="printReport()">Print</button>
+</div>
+
+<div class="wrap" id="report">
+
+  <div class="letterhead">
+    <div class="org">&nbsp;</div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="doc-title">
+    <h1>Room Revenue Report</h1>
+  </div>
+
+  <hr class="rule" />
+
+  <div id="highlightSection"></div>
+
+  <div class="section-label">Month-on-Month Detail</div>
+  <div id="tableSection"></div>
+
+  <div id="summarySection"></div>
+
+</div>
+
+  <!-- Cloud login / sync -->
+  <div class="cloud-panel">
+    <h3>&#9729;&#65039; Cloud storage &amp; sync</h3>
+    <p class="sub">Log in to keep your figures safe on the server and synced across devices (phone + laptop). Survives clearing your browser. When you're logged out, figures are saved only in this browser.</p>
+
+    <div id="cloudAuth">
+      <div class="cloud-grid">
+        <div>
+          <label>Email</label>
+          <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="username" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="authPass" type="password" placeholder="your password" autocomplete="current-password" />
+        </div>
+      </div>
+      <div class="cloud-actions">
+        <button class="btn-login" onclick="cloudLogin()">&#128275; Log in</button>
+        <button class="btn-signup" onclick="cloudSignup()">&#127381; Create account</button>
+      </div>
+    </div>
+
+    <div id="cloudSynced" style="display:none">
+      <div class="cloud-actions">
+        <button class="btn-login" onclick="syncNow()">&#128260; Sync now</button>
+        <button class="btn-signup" onclick="uploadThisDevice()">&#11014;&#65039; Upload this device to cloud</button>
+        <button class="btn-logout" style="margin-left:auto" onclick="cloudLogout()">Log out</button>
+      </div>
+    </div>
+
+    <div id="cloudMsg" class="cloud-msg"></div>
+
+    <details>
+      <summary>&#128214; First-time Supabase setup (run the SQL once) &mdash; click to expand</summary>
+      <p class="sub" style="margin-top:10px">The cloud project is already configured in this page. The one thing you must do once is create the table: open your Supabase project &rarr; <strong>SQL Editor</strong> &rarr; paste the script below &rarr; <strong>Run</strong>. Then create your account above and log in.</p>
+      <pre id="sqlScript"></pre>
+      <button class="copy-sql" onclick="copySql()">&#128203; Copy SQL</button>
+    </details>
+  </div>
+
+  <!-- Add / update a month -->
+  <div class="add-panel">
+    <h3>Add or update a month</h3>
+    <div class="form-row">
+      <div class="field">
+        <label>Month</label>
+        <select id="inMonth"></select>
+      </div>
+      <div class="field">
+        <label id="labelA">2025 Revenue (AED)</label>
+        <input id="inA" type="number" step="0.01" placeholder="e.g. 401138.97" />
+      </div>
+      <div class="field">
+        <label id="labelB">2026 Revenue (AED)</label>
+        <input id="inB" type="number" step="0.01" placeholder="e.g. 248314.76" />
+      </div>
+      <div class="field">
+        <button onclick="saveMonth()" style="background:#1a1a1a; color:#fff; border:1px solid #1a1a1a; border-radius:5px; padding:9px 16px; font-family:Arial, sans-serif; font-weight:600; cursor:pointer;">Save month</button>
+      </div>
+    </div>
+    <div id="msg" class="msg"></div>
+    <div class="panel-actions">
+      <button onclick="resetDefaults()">Reset to Jan&ndash;Sep defaults</button>
+      <button onclick="clearAll()">Clear all months</button>
+    </div>
+  </div>
+
+<script>
+  /* ============================================================
+     Cloud config (Supabase) — pre-filled for this project.
+     Figures sync to the server when logged in; otherwise they
+     are kept in this browser (localStorage) exactly as before.
+     ============================================================ */
+  const SUPABASE_URL = "https://lodtshaztzwrxwyybpkl.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_VC2J-R8dD0rAw3dm-X8B3g_YglSm8Pn";
+  const TABLE = "revenue_months";
+
+  // SQL the user runs once in the Supabase SQL Editor to create the table.
+  const SETUP_SQL = `-- Room Revenue Report — run once in the Supabase SQL Editor
+create table if not exists revenue_months (
+  id text not null,
+  user_id uuid not null default auth.uid(),
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table revenue_months enable row level security;
+-- each user can only see / change their own rows
+create policy "own revenue rows" on revenue_months for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);`;
+
+  let sb = null;          // supabase client
+  let cloudUser = null;   // logged-in user
+
+  function initSupabase() {
+    if (!window.supabase) { setCloudStatus("\u2601\uFE0F Cloud library blocked (need internet)", "err"); return false; }
+    try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return true; }
+    catch (e) { console.error(e); setCloudStatus("\u2601\uFE0F Cloud: error", "err"); return false; }
+  }
+
+  function setCloudStatus(text, cls) {
+    const el = document.getElementById("cloudStatus");
+    el.innerHTML = text;
+    el.className = "cloud-pill" + (cls ? " " + cls : "");
+  }
+  function setCloudMsg(text, cls) {
+    const el = document.getElementById("cloudMsg");
+    el.textContent = text;
+    el.className = "cloud-msg" + (cls ? " " + cls : "");
+  }
+
+  const STORAGE_KEY = "revenueCompareData_v1"; // shared with the other report files in this browser
+  const MONTH_ORDER = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const MONTH_NAMES = { Jan:"January", Feb:"February", Mar:"March", Apr:"April", May:"May", Jun:"June", Jul:"July", Aug:"August", Sep:"September", Oct:"October", Nov:"November", Dec:"December" };
+  const DEFAULTS = [
+    { month: "Jan", y2025: 914995.35, y2026: 1113676.84 },
+    { month: "Feb", y2025: 888630.40, y2026: 863944.87  },
+    { month: "Mar", y2025: 366273.53, y2026: 335708.57  },
+    { month: "Apr", y2025: 508752.75, y2026: 308307.92  },
+    { month: "May", y2025: 443553.85, y2026: 384664.52  },
+    { month: "Jun", y2025: 354758.05, y2026: 348358.75  },
+    { month: "Jul", y2025: 401138.00, y2026: 399677.00  },
+    { month: "Aug", y2025: 388954.68, y2026: 419626.42  },
+    { month: "Sep", y2025: 419756.08, y2026: 447486.48  },
+  ];
+
+  const now = new Date();
+  // "Current" month = latest month that has figures recorded (falls back to the real calendar month if empty)
+  let CURRENT_MONTH = MONTH_ORDER[now.getMonth()];
+  function updateCurrentMonth() {
+    const idx = DATA.map(r => MONTH_ORDER.indexOf(r.month)).filter(i => i >= 0);
+    CURRENT_MONTH = idx.length ? MONTH_ORDER[Math.max(...idx)] : MONTH_ORDER[new Date().getMonth()];
+  }
+  const YEAR_B = now.getFullYear();
+  const YEAR_A = YEAR_B - 1;
+
+  let DATA = load();
+
+  // One-time cleanup: an earlier version of this report mistakenly saved
+  // July's figures under "Aug". If that's present and July is missing,
+  // move it to the correct month automatically.
+  (function migrateAugToJul() {
+    const augIdx = DATA.findIndex(r => r.month === "Aug");
+    const hasJul = DATA.some(r => r.month === "Jul");
+    if (augIdx !== -1 && !hasJul && !DATA.some(r => r.month === "Sep")) {
+      DATA[augIdx].month = "Jul";
+      save();
+    }
+  })();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [...DEFAULTS];
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [...DEFAULTS];
+      return arr;
+    } catch { return [...DEFAULTS]; }
+  }
+  function save() {
+    DATA.sort((a,b) => MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA));
+  }
+
+  const fmt = n => n.toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sign = n => (n >= 0 ? "+" : "");
+
+  function populateMonthSelect() {
+    const sel = document.getElementById("inMonth");
+    const keep = sel.value;
+    sel.innerHTML = MONTH_ORDER.map(m => `<option value="${m}" ${m === (keep || CURRENT_MONTH) ? "selected" : ""}>${MONTH_NAMES[m]}</option>`).join("");
+  }
+
+  function saveMonth() {
+    const month = document.getElementById("inMonth").value;
+    const a = parseFloat(document.getElementById("inA").value);
+    const b = parseFloat(document.getElementById("inB").value);
+    const msg = document.getElementById("msg");
+    if (isNaN(a) || isNaN(b)) {
+      msg.className = "msg err";
+      msg.textContent = "Please enter both revenue figures.";
+      return;
+    }
+    const existing = DATA.find(r => r.month === month);
+    if (existing) { existing.y2025 = a; existing.y2026 = b; }
+    else DATA.push({ month, y2025: a, y2026: b });
+    save();
+    const rec = DATA.find(r => r.month === month);
+    cloudUpsertMonth(rec);
+    render();
+    msg.className = "msg ok";
+    msg.textContent = `Saved ${MONTH_NAMES[month]}: ${YEAR_A} AED ${fmt(a)} \u00B7 ${YEAR_B} AED ${fmt(b)}` + (cloudUser ? " \u2601\uFE0F synced" : "");
+    document.getElementById("inA").value = "";
+    document.getElementById("inB").value = "";
+  }
+
+  function removeMonth(month) {
+    DATA = DATA.filter(r => r.month !== month);
+    save();
+    cloudDeleteMonth(month);
+    render();
+  }
+
+  function resetDefaults() {
+    if (!confirm("Reset to the original Jan\u2013Sep figures? Any months you added will be removed.")) return;
+    DATA = [...DEFAULTS];
+    save();
+    render();
+    if (cloudUser) pushAllToCloud().then(() => setCloudMsg("Reset figures uploaded to the cloud.", "ok"));
+  }
+
+  function clearAll() {
+    if (!confirm("Remove all months from the report?")) return;
+    const toDelete = DATA.map(r => r.month);
+    DATA = [];
+    save();
+    render();
+    if (cloudUser) Promise.all(toDelete.map(m => cloudDeleteMonth(m))).then(() => setCloudMsg("All months removed from the cloud.", "ok"));
+  }
+
+  function render() {
+    updateCurrentMonth();
+    populateMonthSelect();
+    const today = new Date();
+    const reportDate = today.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+    document.getElementById("meta").innerHTML = `Report date: ${reportDate}`;
+
+    const sorted = [...DATA].sort((a,b) => MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month));
+    const range = sorted.length
+      ? (sorted.length === 1 ? sorted[0].month : `${sorted[0].month} \u2013 ${sorted[sorted.length-1].month}`)
+      : "\u2014";
+
+    // ---- Current month highlight ----
+    const curRow = DATA.find(r => r.month === CURRENT_MONTH);
+    const highlightEl = document.getElementById("highlightSection");
+    if (curRow) {
+      const v = curRow.y2026 - curRow.y2025;
+      const p = curRow.y2025 ? (v / curRow.y2025) * 100 : 0;
+      const c = v >= 0 ? "pos" : "neg";
+      const sym = v >= 0 ? "\u25B2" : "\u25BC";
+      highlightEl.innerHTML = `
+        <div class="highlight">
+          <div class="highlight-row">
+            <span class="month-tag">${MONTH_NAMES[CURRENT_MONTH]} Room Revenue Comparison ${YEAR_A} - ${YEAR_B}</span>
+          </div>
+          <table class="figures" style="margin-top:16px;">
+            <thead>
+              <tr>
+                <th></th>
+                <th class="num year-head">${YEAR_A}</th>
+                <th class="num year-head">${YEAR_B}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rowlabel">Room Revenue</td>
+                <td class="num">AED ${fmt(curRow.y2025)}</td>
+                <td class="num">AED ${fmt(curRow.y2026)}</td>
+              </tr>
+              <tr class="total">
+                <td class="rowlabel">Variance</td>
+                <td colspan="2" class="num ${c}">${sym} ${sign(v)}AED ${fmt(v)}<span class="pct">(${sign(p)}${p.toFixed(2)}%)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      highlightEl.innerHTML = `<div class="highlight"><div class="highlight-row"><span class="month-tag">${MONTH_NAMES[CURRENT_MONTH]} Room Revenue Comparison ${YEAR_A} - ${YEAR_B}</span></div><div style="font-family:Arial, sans-serif; font-size:13px; color:#666; margin-top:10px;">Not yet recorded. Add it using the panel below.</div></div>`;
+    }
+
+    // ---- Full table ----
+    const tableEl = document.getElementById("tableSection");
+    const summaryEl = document.getElementById("summarySection");
+    if (!sorted.length) {
+      tableEl.innerHTML = `<div class="empty">No months recorded yet.</div>`;
+      summaryEl.innerHTML = "";
+      return;
+    }
+
+    const totA = sorted.reduce((s,r) => s + r.y2025, 0);
+    const totB = sorted.reduce((s,r) => s + r.y2026, 0);
+    const totV = totB - totA;
+    const totP = totA ? (totV / totA) * 100 : 0;
+    const totC = totV >= 0 ? "pos" : "neg";
+
+    tableEl.innerHTML = `
+      <table class="figures">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>${YEAR_A} (AED)</th>
+            <th>${YEAR_B} (AED)</th>
+            <th>Variance (AED)</th>
+            <th>Var %</th>
+            <th class="del"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(r => {
+            const v = r.y2026 - r.y2025;
+            const p = r.y2025 ? (v / r.y2025) * 100 : 0;
+            const c = v >= 0 ? "pos" : "neg";
+            const isCur = r.month === CURRENT_MONTH ? "current-row" : "";
+            return `<tr class="${isCur}">
+              <td>${MONTH_NAMES[r.month]}</td>
+              <td>${fmt(r.y2025)}</td>
+              <td>${fmt(r.y2026)}</td>
+              <td class="${c}">${sign(v)}${fmt(v)}</td>
+              <td class="${c}">${sign(p)}${p.toFixed(2)}%</td>
+              <td class="del"><button class="del-btn" onclick="removeMonth('${r.month}')" title="Remove ${MONTH_NAMES[r.month]}">\u00D7</button></td>
+            </tr>`;
+          }).join("")}
+          <tr class="total">
+            <td>Total</td>
+            <td>${fmt(totA)}</td>
+            <td>${fmt(totB)}</td>
+            <td class="${totC}">${sign(totV)}${fmt(totV)}</td>
+            <td class="${totC}">${sign(totP)}${totP.toFixed(2)}%</td>
+            <td class="del"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    summaryEl.innerHTML = "";
+  }
+
+  /* ============================================================
+     CLOUD SYNC — Supabase upsert / delete / pull
+     Each month is one row: id = month code ("Sep"), data = {month,y2025,y2026}
+     ============================================================ */
+  async function cloudUpsertMonth(rec) {
+    if (!sb || !cloudUser || !rec) return;
+    try {
+      await sb.from(TABLE).upsert({ id: rec.month, data: rec, updated_at: new Date().toISOString() });
+    } catch (e) { console.error(e); setCloudMsg("Could not sync that change to the cloud.", "err"); }
+  }
+  async function cloudDeleteMonth(month) {
+    if (!sb || !cloudUser) return;
+    try { await sb.from(TABLE).delete().eq("id", month); }
+    catch (e) { console.error(e); }
+  }
+  // Pull everything from cloud -> local (cloud is the source of truth on login)
+  async function pullFromCloud() {
+    if (!sb || !cloudUser) return;
+    try {
+      const { data, error } = await sb.from(TABLE).select("data");
+      if (error) throw error;
+      if (Array.isArray(data)) {
+        DATA = data.map(row => row.data).filter(Boolean);
+        save();
+        render();
+      }
+    } catch (e) {
+      console.error(e);
+      setCloudMsg("Couldn't read from the cloud. Have you run the SQL setup once? (See the setup section.)", "err");
+    }
+  }
+  // Push all local months up to cloud (first-time upload / merge)
+  async function pushAllToCloud() {
+    if (!sb || !cloudUser) return;
+    for (const r of DATA) await cloudUpsertMonth(r);
+  }
+
+  async function cloudSignup() {
+    if (!sb) return;
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPass").value;
+    if (!email || !password) { setCloudMsg("Enter an email and password.", "err"); return; }
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) { setCloudMsg("Sign up failed: " + error.message, "err"); return; }
+    setCloudMsg("Account created. If email confirmation is on, confirm it, then log in.", "ok");
+  }
+  async function cloudLogin() {
+    if (!sb) return;
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPass").value;
+    if (!email || !password) { setCloudMsg("Enter an email and password.", "err"); return; }
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { setCloudMsg("Login failed: " + error.message, "err"); return; }
+    cloudUser = data.user;
+    setCloudMsg("Logged in \u2014 syncing your figures\u2026", "ok");
+    await pullFromCloud();
+    // If the cloud was empty for this user, seed it with whatever is on this device.
+    const { data: rows } = await sb.from(TABLE).select("id");
+    if (!rows || rows.length === 0) { await pushAllToCloud(); }
+    setCloudMsg("Logged in \u2014 your figures now sync automatically on save.", "ok");
+    refreshCloudUI();
+  }
+  async function cloudLogout() {
+    if (sb) await sb.auth.signOut();
+    cloudUser = null;
+    setCloudMsg("Logged out. Figures are now saved only in this browser.", "");
+    refreshCloudUI();
+  }
+  async function syncNow() {
+    await pullFromCloud();
+    setCloudMsg("Synced \u2713", "ok");
+  }
+  async function uploadThisDevice() {
+    await pushAllToCloud();
+    setCloudMsg("Uploaded this device's figures to the cloud.", "ok");
+  }
+
+  function refreshCloudUI() {
+    const authEl = document.getElementById("cloudAuth");
+    const syncedEl = document.getElementById("cloudSynced");
+    if (cloudUser) {
+      setCloudStatus("\u2601\uFE0F Synced: " + (cloudUser.email || "signed in"), "ok");
+      authEl.style.display = "none";
+      syncedEl.style.display = "";
+    } else {
+      setCloudStatus("\u2601\uFE0F Cloud: please log in");
+      authEl.style.display = "";
+      syncedEl.style.display = "none";
+    }
+  }
+
+  function copySql() {
+    navigator.clipboard.writeText(SETUP_SQL).then(() => setCloudMsg("SQL copied to clipboard \u2713", "ok"));
+  }
+
+  async function downloadPDF() {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = "Generating\u2026";
+    btn.disabled = true;
+
+    const toHide = document.querySelectorAll(".toolbar, .add-panel, .cloud-panel, .del-btn, td.del, th.del");
+    toHide.forEach(el => el.style.visibility = "hidden");
+
+    try {
+      const target = document.getElementById("report");
+      const canvas = await html2canvas(target, { scale: 2, backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`room-revenue-report-${YEAR_B}.pdf`);
+    } catch (e) {
+      alert("Couldn't generate the PDF (this can happen if your network/browser blocks the PDF library from loading). Try Print instead, then choose 'Save as PDF' in the print dialog.");
+      console.error(e);
+    } finally {
+      toHide.forEach(el => el.style.visibility = "");
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  function printReport() {
+    const cleanHtml = document.getElementById("report").outerHTML;
+    const styles = document.querySelector("style").outerHTML;
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("Your browser blocked the print window. Please allow pop-ups for this page, or press Ctrl+P / Cmd+P to print directly.");
+      return;
+    }
+    w.document.open();
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${document.title}</title>${styles}</head><body>${cleanHtml}</body></html>`);
+    w.document.close();
+    w.onload = () => { w.focus(); w.print(); };
+    setTimeout(() => { try { w.focus(); w.print(); } catch(e) {} }, 400);
+  }
+
+  /* ---------- INIT ---------- */
+  (async function init() {
+    document.getElementById("sqlScript").textContent = SETUP_SQL;
+    render();
+    if (initSupabase()) {
+      try {
+        const { data } = await sb.auth.getUser();
+        cloudUser = data && data.user ? data.user : null;
+      } catch (e) { cloudUser = null; }
+      if (cloudUser) await pullFromCloud();
+      refreshCloudUI();
+    }
+  })();
+</script>
+</body>
+</html>
